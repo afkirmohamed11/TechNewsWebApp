@@ -1,12 +1,16 @@
 import React from 'react';
-import { categories } from '../data/mockData';
 
 interface CategoryFilterProps {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
+  categories: string[];
 }
 
-const CategoryFilter: React.FC<CategoryFilterProps> = ({ selectedCategory, onCategoryChange }) => {
+const CategoryFilter: React.FC<CategoryFilterProps> = ({ 
+  selectedCategory, 
+  onCategoryChange,
+  categories 
+}) => {
   return (
     <div className="flex gap-2 mb-6 overflow-x-auto py-2">
       <button
@@ -21,15 +25,15 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({ selectedCategory, onCat
       </button>
       {categories.map((category) => (
         <button
-          key={category.id}
-          onClick={() => onCategoryChange(category.name)}
+          key={category}
+          onClick={() => onCategoryChange(category)}
           className={`px-4 py-2 rounded-full ${
-            selectedCategory === category.name
+            selectedCategory === category
               ? 'bg-blue-600 text-white'
               : 'bg-gray-200 hover:bg-gray-300'
           }`}
         >
-          {category.name}
+          {category}
         </button>
       ))}
     </div>

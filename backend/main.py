@@ -1,4 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
 from sqlalchemy.orm import Session
 from database import get_db
 from crud import (
@@ -11,6 +14,21 @@ from crud import (
 from schemas import Article, ArticleDetail
 
 app = FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Vite's default port
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Create images directory if it doesn't exist
+os.makedirs("images", exist_ok=True)
+
+# Mount the images directory
+app.mount("/images", StaticFiles(directory="images"), name="images")
 
 # Get all articles with optional filters
 @app.get("/articles", response_model=list[Article])

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { categories } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
 import { NewspaperIcon, ChevronDown } from 'lucide-react';
+import { api } from '../services/api';
 
 interface HeaderProps {
   onCategorySelect: (category: string) => void;
@@ -9,6 +9,23 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onCategorySelect, onHomeClick }) => {
   const [showCategories, setShowCategories] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const fetchedCategories = await api.getCategories();
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   return (
     <header className="bg-blue-600 text-white p-4 shadow-lg">
@@ -46,18 +63,24 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect, onHomeClick }) => {
               >
                 All
               </button>
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => {
-                    onCategorySelect(category.name);
-                    setShowCategories(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                  {category.name}
-                </button>
-              ))}
+              {loading ? (
+                <div className="px-4 py-2">
+                  <div className="animate-pulse h-4 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              ) : (
+                categories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => {
+                      onCategorySelect(category);
+                      setShowCategories(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  >
+                    {category}
+                  </button>
+                ))
+              )}
             </div>
           )}
         </div>
