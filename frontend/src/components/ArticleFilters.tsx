@@ -39,10 +39,10 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
             {selectedCategory === 'All' ? 'All Articles' : selectedCategory}
           </h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-5">
           <button
             onClick={() => setViewType('latest')}
-            className={`px-4 py-2 rounded-full ${
+            className={`px-8 py-3 rounded-full text-lg font-semibold ${
               viewType === 'latest'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 hover:bg-gray-300'
@@ -52,7 +52,7 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
           </button>
           <button
             onClick={() => setViewType('popular')}
-            className={`px-4 py-2 rounded-full ${
+            className={`px-8 py-3 rounded-full text-lg font-semibold ${
               viewType === 'popular'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 hover:bg-gray-300'
