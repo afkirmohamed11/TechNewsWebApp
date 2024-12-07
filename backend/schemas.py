@@ -9,8 +9,6 @@ class Article(BaseModel):
     Description: str | None
     Latest: bool
 
-    class Config:
-        orm_mode = True
 
 class ArticleDetail(Article):
     Content: str
