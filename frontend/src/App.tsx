@@ -21,14 +21,39 @@ function App() {
     try {
       setLoading(true);
       let fetchedArticles;
+      
       if (selectedCategory === 'All') {
+        // For All category, first get all articles
         fetchedArticles = await api.getAllArticles();
+        
+        // Filter based on viewType
+        if (viewType === 'latest') {
+          // For latest, only show articles where Latest is true
+          fetchedArticles = fetchedArticles
+            .filter(article => article.Latest)
+            .sort((a, b) => 
+              new Date(b.Date_of_publication).getTime() - new Date(a.Date_of_publication).getTime()
+            );
+        } else {
+          // For popular, only show articles where Latest is false
+          fetchedArticles = fetchedArticles
+            .filter(article => !article.Latest)
+            .sort((a, b) => 
+              new Date(b.Date_of_publication).getTime() - new Date(a.Date_of_publication).getTime()
+            );
+        }
       } else {
-        fetchedArticles = await api.getArticlesByCategory(selectedCategory);
+        // For specific categories, use the category and sort endpoint
+        fetchedArticles = await api.getArticlesByCategoryAndSort(
+          selectedCategory,
+          viewType === 'latest'
+        );
       }
+      
       setArticles(fetchedArticles);
     } catch (error) {
       console.error('Error fetching articles:', error);
+      setArticles([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -83,7 +108,12 @@ function App() {
               </div>
             ) : articles.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-xl text-gray-600">No articles found for {selectedCategory}</p>
+                <p className="text-xl text-gray-600">
+                  {selectedCategory === 'All' 
+                    ? `No ${viewType} articles available at the moment`
+                    : `No ${viewType} articles found for ${selectedCategory}`
+                  }
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
