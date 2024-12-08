@@ -10,6 +10,7 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect, onHomeClick }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<number>();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -31,8 +32,26 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect, onHomeClick }) => {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
   }, []);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+    }
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = window.setTimeout(() => {
+      setIsOpen(false);
+    }, 300); // Small delay before closing to make it feel smoother
+  };
 
   return (
     <header className="bg-blue-600 shadow-lg">
@@ -52,6 +71,18 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect, onHomeClick }) => {
           .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #999;
           }
+          .dropdown-content {
+            transform-origin: top;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+          }
+          .dropdown-enter {
+            opacity: 0;
+            transform: scaleY(0.95);
+          }
+          .dropdown-enter-active {
+            opacity: 1;
+            transform: scaleY(1);
+          }
         `}
       </style>
       <div className="container mx-auto px-4 py-4">
@@ -62,7 +93,12 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect, onHomeClick }) => {
           >
             Tech News Platform
           </h1>
-          <div className="relative" ref={dropdownRef}>
+          <div 
+            className="relative" 
+            ref={dropdownRef}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="flex items-center gap-2 px-4 py-2 text-white hover:bg-blue-700 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
@@ -86,7 +122,11 @@ const Header: React.FC<HeaderProps> = ({ onCategorySelect, onHomeClick }) => {
             </button>
 
             {isOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-50 transform transition-all duration-200 ease-out origin-top">
+              <div 
+                className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-50 dropdown-content"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
                 <div className="py-2 max-h-[70vh] overflow-y-auto custom-scrollbar">
                   {categories.map((category, index) => (
                     <button
