@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { NewspaperIcon, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 
 interface HeaderProps {
@@ -8,81 +7,108 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onCategorySelect, onHomeClick }) => {
-  const [showCategories, setShowCategories] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const fetchedCategories = await api.getCategories();
-        setCategories(fetchedCategories);
+        setCategories(['All', ...fetchedCategories]);
       } catch (error) {
         console.error('Error fetching categories:', error);
-      } finally {
-        setLoading(false);
       }
     };
-
     fetchCategories();
   }, []);
 
-  return (
-    <header className="bg-blue-600 text-white p-4 shadow-lg">
-      <div className="container mx-auto flex justify-between items-center">
-        <div 
-          className="flex items-center space-x-2 cursor-pointer"
-          onClick={onHomeClick}
-        >
-          <NewspaperIcon className="h-8 w-8" />
-          <h1 className="text-2xl font-bold">Tech News Dashboard</h1>
-        </div>
-        
-        <div className="relative">
-          <button
-            onMouseEnter={() => setShowCategories(true)}
-            onMouseLeave={() => setShowCategories(false)}
-            className="px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            Categories
-            <ChevronDown className="h-4 w-4" />
-          </button>
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
 
-          {showCategories && (
-            <div
-              className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50"
-              onMouseEnter={() => setShowCategories(true)}
-              onMouseLeave={() => setShowCategories(false)}
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <header className="bg-blue-600 shadow-lg">
+      <style>
+        {`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #999;
+          }
+        `}
+      </style>
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <h1 
+            onClick={onHomeClick}
+            className="text-2xl font-bold text-white cursor-pointer hover:text-blue-100 transition-colors duration-200"
+          >
+            Tech News Platform
+          </h1>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="flex items-center gap-2 px-4 py-2 text-white hover:bg-blue-700 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
             >
-              <button
-                onClick={() => {
-                  onCategorySelect('All');
-                  setShowCategories(false);
-                }}
-                className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+              Categories
+              <svg
+                className={`w-5 h-5 transition-transform duration-200 ${
+                  isOpen ? 'transform rotate-180' : ''
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                All
-              </button>
-              {loading ? (
-                <div className="px-4 py-2">
-                  <div className="animate-pulse h-4 bg-gray-200 rounded w-3/4"></div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {isOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-50 transform transition-all duration-200 ease-out origin-top">
+                <div className="py-2 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                  {categories.map((category, index) => (
+                    <button
+                      key={category}
+                      onClick={() => {
+                        onCategorySelect(category);
+                        setIsOpen(false);
+                      }}
+                      className={`w-full text-left px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150 flex items-center gap-3
+                        ${index !== categories.length - 1 ? 'border-b border-gray-100' : ''}
+                        ${index === 0 ? 'rounded-t-xl' : ''}
+                        ${index === categories.length - 1 ? 'rounded-b-xl' : ''}
+                      `}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-blue-600 opacity-0 transition-opacity duration-200 transform scale-0 group-hover:opacity-100 group-hover:scale-100"></span>
+                      {category}
+                    </button>
+                  ))}
                 </div>
-              ) : (
-                categories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => {
-                      onCategorySelect(category);
-                      setShowCategories(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  >
-                    {category}
-                  </button>
-                ))
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
